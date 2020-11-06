@@ -16,7 +16,7 @@ type Author struct {
 type Answer struct {
 	Id           int
 	Body         string
-	Authors      []*Author
+	authorId     int
 	Question     *Question
 	creationTime time.Time
 	lastUpdated  time.Time
@@ -28,7 +28,7 @@ type Question struct {
 	Title       string
 	Summary     string
 	Body        string
-	Author      *Author
+	authorId    int
 	Answer      *Answer
 	timeAdded   time.Time
 	lastUpdated time.Time

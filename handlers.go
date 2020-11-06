@@ -19,21 +19,13 @@ func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &jsonRequest); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	q := Question{Title: jsonRequest.QuestionTitle, Summary: jsonRequest.QuestionSummary, Body: jsonRequest.Body, Author: db.GetAuthor(jsonRequest.AuthorId)}
+	q := Question{Title: jsonRequest.QuestionTitle, Summary: jsonRequest.QuestionSummary, Body: jsonRequest.Body, authorId: jsonRequest.AuthorId}
 	q.timeAdded = time.Now()
 	q = db.AddQuestion(q)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(q); err != nil {
-		panic(err)
-	}
+	JSONResponse(w, http.StatusOK, q)
 }
 
 func AddAuthorHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,20 +35,12 @@ func AddAuthorHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &newAuthor); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
 	newAuthor = db.AddAuthor(newAuthor)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(newAuthor); err != nil {
-		panic(err)
-	}
+	JSONResponse(w, http.StatusOK, newAuthor)
 }
 
 func AddAnswerHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,11 +50,7 @@ func AddAnswerHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &jsonRequest); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 	question := db.GetQuestion(jsonRequest.QuestionId)
@@ -79,16 +59,11 @@ func AddAnswerHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	author := db.GetAuthor(jsonRequest.AuthorId)
-	authors := []*Author{author}
-	a := Answer{Body: jsonRequest.Body, Question: question, Authors: authors}
+	a := Answer{Body: jsonRequest.Body, Question: question, authorId: author.Id}
 	a.creationTime = time.Now()
 	a.lastUpdated = time.Now()
 	a = db.AddAnswer(a)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(a); err != nil {
-		panic(err)
-	}
+	JSONResponse(w, http.StatusOK, a)
 }
 
 func GetQuestionHandler(w http.ResponseWriter, r *http.Request) {
@@ -96,9 +71,8 @@ func GetQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(db.GetQuestion(id))
+	question := db.GetQuestion(id)
+	JSONResponse(w, http.StatusOK, question)
 }
 
 func GetAuthorHandler(w http.ResponseWriter, r *http.Request) {
@@ -106,9 +80,8 @@ func GetAuthorHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(db.GetAuthor(id))
+	author := db.GetAuthor(id)
+	JSONResponse(w, http.StatusOK, author)
 }
 
 func GetAnswerHandler(w http.ResponseWriter, r *http.Request) {
@@ -116,9 +89,8 @@ func GetAnswerHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(db.GetAnswer(id))
+	answer := db.GetAnswer(id)
+	JSONResponse(w, http.StatusOK, answer)
 }
 
 func DeleteQuestionHandler(w http.ResponseWriter, r *http.Request) {
@@ -127,9 +99,7 @@ func DeleteQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	db.DeleteQuestion(id)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Question %d deleted", id)})
+	JSONResponse(w, http.StatusOK, ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Question %d deleted", id)})
 }
 
 func DeleteAuthorHandler(w http.ResponseWriter, r *http.Request) {
@@ -138,9 +108,7 @@ func DeleteAuthorHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	db.DeleteAuthor(id)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Author %d deleted", id)})
+	JSONResponse(w, http.StatusOK, ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Author %d deleted", id)})
 }
 
 func DeleteAnswerHandler(w http.ResponseWriter, r *http.Request) {
@@ -149,9 +117,7 @@ func DeleteAnswerHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	db.DeleteAnswer(id)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Answer %d deleted", id)})
+	JSONResponse(w, http.StatusOK, ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Answer %d deleted", id)})
 }
 
 func UpdateAuthorHandler(w http.ResponseWriter, r *http.Request) {
@@ -167,20 +133,13 @@ func UpdateAuthorHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &updatedAuthor); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
 	updatedAuthor = db.UpdateAuthor(updatedAuthor, id)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(updatedAuthor); err != nil {
-		panic(err)
-	}
+
+	JSONResponse(w, http.StatusOK, updatedAuthor)
 }
 
 func UpdateQuestionHandler(w http.ResponseWriter, r *http.Request) {
@@ -195,11 +154,7 @@ func UpdateQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &jsonRequest); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
@@ -210,11 +165,7 @@ func UpdateQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	q.lastUpdated = time.Now()
 
 	q = db.UpdateQuestion(*q, id)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(q); err != nil {
-		panic(err)
-	}
+	JSONResponse(w, http.StatusOK, q)
 }
 
 func UpdateAnswerHandler(w http.ResponseWriter, r *http.Request) {
@@ -228,22 +179,13 @@ func UpdateAnswerHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &jsonRequest); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	author := db.GetAuthor(jsonRequest.AuthorId)
 	answer := db.GetAnswer(id)
-	answer.Authors = append(answer.Authors, author)
+	answer.authorId = jsonRequest.AuthorId
 	answer.Body = jsonRequest.Body
 	answer.lastUpdated = time.Now()
 	answer = db.UpdateAnswer(*answer, id)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(answer); err != nil {
-		panic(err)
-	}
+	JSONResponse(w, http.StatusOK, answer)
 }
