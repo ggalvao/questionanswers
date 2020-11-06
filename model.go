@@ -17,7 +17,7 @@ type Answer struct {
 	Id           int
 	Body         string
 	authorId     int
-	Question     *Question
+	questionId   int
 	creationTime time.Time
 	lastUpdated  time.Time
 }

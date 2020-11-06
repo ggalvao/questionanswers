@@ -100,4 +100,10 @@ var routes = Routes{
 		"/updateanswer/{id}",
 		UpdateAnswerHandler,
 	},
+	Route{
+		"Get All Questions",
+		"GET",
+		"/getallquestions",
+		GetAllQuestions,
+	},
 }
