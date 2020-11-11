@@ -1,10 +1,10 @@
-package main
+package model
 
 import "time"
 
 // Author etc
 type Author struct {
-	Id        int
+	ID        int
 	Email     string
 	FirstName string
 	LastName  string
@@ -14,22 +14,22 @@ type Author struct {
 
 // Answer etc
 type Answer struct {
-	Id           int
+	ID           int
 	Body         string
-	authorId     int
-	questionId   int
-	creationTime time.Time
-	lastUpdated  time.Time
+	AuthorID     int
+	QuestionID   int
+	CreationTime time.Time
+	LastUpdated  time.Time
 }
 
 // Question etc
 type Question struct {
-	Id          int
+	ID          int
 	Title       string
 	Summary     string
 	Body        string
-	authorId    int
+	AuthorID    int
 	Answer      *Answer
-	timeAdded   time.Time
-	lastUpdated time.Time
+	TimeAdded   time.Time
+	LastUpdated time.Time
 }

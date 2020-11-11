@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"bytes"
@@ -7,10 +7,13 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/ggalvao/questionanswers/db"
+	"github.com/ggalvao/questionanswers/model"
 )
 
 func init() {
-	db.Init()
+	db.Db.Init()
 
 }
 
@@ -34,14 +37,14 @@ func TestAddAuthorHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-	var result Author
-	var expected Author
+	var result model.Author
+	var expected model.Author
 	// Check the response body is what we expect.
 	json.Unmarshal([]byte(`{"Id":0,"Email":"ggalvao@gmail.com","FirstName":"Gabriel","LastName":"Galvão","Questions":null,"Answers":null}`), &expected)
 	json.Unmarshal(rr.Body.Bytes(), &result)
 
-	expected.Id = 0
-	result.Id = 0
+	expected.ID = 0
+	result.ID = 0
 
 	if !reflect.DeepEqual(expected, result) {
 		t.Errorf("handler returned unexpected body: got %v want %v",
@@ -49,7 +52,7 @@ func TestAddAuthorHandler(t *testing.T) {
 	}
 }
 func TestAddQuestionHandler(t *testing.T) {
-	db.AddAuthor(Author{Email: "test@test.com", FirstName: "Test", LastName: "Test Last Name"})
+	db.Db.AddAuthor(model.Author{Email: "test@test.com", FirstName: "Test", LastName: "Test Last Name"})
 	reqBody := []byte(`{
 		"AuthorId": 0,
 		"QuestionTitle": "Test2 Question",

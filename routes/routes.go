@@ -1,8 +1,9 @@
-package main
+package routes
 
 import (
 	"net/http"
 
+	"github.com/ggalvao/questionanswers/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -32,78 +33,78 @@ var routes = Routes{
 		"New Question",
 		"POST",
 		"/newquestion",
-		AddQuestionHandler,
+		handlers.AddQuestionHandler,
 	},
 	Route{
 		"New Author",
 		"POST",
 		"/newauthor",
-		AddAuthorHandler,
+		handlers.AddAuthorHandler,
 	},
 	Route{
 		"New Answer",
 		"POST",
 		"/newanswer",
-		AddAnswerHandler,
+		handlers.AddAnswerHandler,
 	},
 	Route{
 		"Get Question",
 		"GET",
 		"/getquestion/{id}",
-		GetQuestionHandler,
+		handlers.GetQuestionHandler,
 	},
 	Route{
 		"Get Author",
 		"GET",
 		"/getauthor/{id}",
-		GetAuthorHandler,
+		handlers.GetAuthorHandler,
 	},
 	Route{
 		"Get Answer",
 		"GET",
 		"/getanswer/{id}",
-		GetAnswerHandler,
+		handlers.GetAnswerHandler,
 	},
 	Route{
 		"Delete Question",
 		"DELETE",
 		"/deletequestion/{id}",
-		DeleteQuestionHandler,
+		handlers.DeleteQuestionHandler,
 	},
 	Route{
 		"Delete Author",
 		"DELETE",
 		"/deleteauthor/{id}",
-		DeleteAuthorHandler,
+		handlers.DeleteAuthorHandler,
 	},
 	Route{
 		"Delete Answer",
 		"DELETE",
 		"/deleteanswer/{id}",
-		DeleteAnswerHandler,
+		handlers.DeleteAnswerHandler,
 	},
 	Route{
 		"Update Question",
 		"PATCH",
 		"/updatequestion/{id}",
-		UpdateQuestionHandler,
+		handlers.UpdateQuestionHandler,
 	},
 	Route{
 		"Update Author",
 		"PATCH",
 		"/updateauthor/{id}",
-		UpdateAuthorHandler,
+		handlers.UpdateAuthorHandler,
 	},
 	Route{
 		"Update Answer",
 		"PATCH",
 		"/updateanswer/{id}",
-		UpdateAnswerHandler,
+		handlers.UpdateAnswerHandler,
 	},
 	Route{
 		"Get All Questions",
 		"GET",
 		"/getallquestions",
-		GetAllQuestions,
+		handlers.GetAllQuestions,
 	},
 }

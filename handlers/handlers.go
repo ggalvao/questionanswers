@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -9,74 +9,77 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ggalvao/questionanswers/db"
+	"github.com/ggalvao/questionanswers/model"
+	"github.com/ggalvao/questionanswers/util"
 	"github.com/gorilla/mux"
 )
 
 func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
-	var jsonRequest RequestInformation
+	var jsonRequest model.RequestInformation
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &jsonRequest); err != nil {
-		JSONResponse(w, http.StatusUnprocessableEntity, err)
+		util.JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	if db.GetAuthor(jsonRequest.AuthorId) == nil {
-		JSONResponse(w, http.StatusNotFound, ResponseInformation{Message: "Author not found"})
+	if db.Db.GetAuthor(jsonRequest.AuthorID) == nil {
+		util.JSONResponse(w, http.StatusNotFound, model.ResponseInformation{Message: "Author not found"})
 		return
 	}
-	q := Question{Title: jsonRequest.QuestionTitle, Summary: jsonRequest.QuestionSummary, Body: jsonRequest.Body, authorId: jsonRequest.AuthorId}
-	q.timeAdded = time.Now()
-	q = db.AddQuestion(q)
-	author := db.GetAuthor(jsonRequest.AuthorId)
+	q := model.Question{Title: jsonRequest.QuestionTitle, Summary: jsonRequest.QuestionSummary, Body: jsonRequest.Body, AuthorID: jsonRequest.AuthorID}
+	q.TimeAdded = time.Now()
+	q = db.Db.AddQuestion(q)
+	author := db.Db.GetAuthor(jsonRequest.AuthorID)
 	author.Questions = append(author.Questions, &q)
-	db.UpdateAuthor(author)
-	JSONResponse(w, http.StatusOK, q)
+	db.Db.UpdateAuthor(author)
+	util.JSONResponse(w, http.StatusOK, q)
 }
 
 func AddAuthorHandler(w http.ResponseWriter, r *http.Request) {
-	var newAuthor *Author
+	var newAuthor *model.Author
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &newAuthor); err != nil {
-		JSONResponse(w, http.StatusUnprocessableEntity, err)
+		util.JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
-	newAuthor = db.AddAuthor(*newAuthor)
-	JSONResponse(w, http.StatusOK, newAuthor)
+	newAuthor = db.Db.AddAuthor(*newAuthor)
+	util.JSONResponse(w, http.StatusOK, newAuthor)
 }
 
 func AddAnswerHandler(w http.ResponseWriter, r *http.Request) {
-	var jsonRequest RequestInformation
+	var jsonRequest model.RequestInformation
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &jsonRequest); err != nil {
-		JSONResponse(w, http.StatusUnprocessableEntity, err)
+		util.JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	question := db.GetQuestion(jsonRequest.QuestionId)
+	question := db.Db.GetQuestion(jsonRequest.QuestionID)
 	if question.Answer != nil {
 		err := errors.New("question already answered. update instead")
-		JSONResponse(w, http.StatusBadRequest, err)
+		util.JSONResponse(w, http.StatusBadRequest, err)
 		return
 	}
-	author := db.GetAuthor(jsonRequest.AuthorId)
-	a := &Answer{Body: jsonRequest.Body, questionId: question.Id}
-	a.creationTime = time.Now()
-	a.lastUpdated = time.Now()
-	a = db.AddAnswer(a)
+	author := db.Db.GetAuthor(jsonRequest.AuthorID)
+	a := &model.Answer{Body: jsonRequest.Body, QuestionID: question.ID}
+	a.CreationTime = time.Now()
+	a.LastUpdated = time.Now()
+	a = db.Db.AddAnswer(a)
 
 	question.Answer = a
-	db.UpdateQuestion(question)
+	db.Db.UpdateQuestion(question)
 	author.Answers = append(author.Answers, a)
-	db.UpdateAuthor(author)
-	JSONResponse(w, http.StatusOK, *a)
+	db.Db.UpdateAuthor(author)
+	util.JSONResponse(w, http.StatusOK, *a)
 }
 
 func GetQuestionHandler(w http.ResponseWriter, r *http.Request) {
@@ -84,13 +87,13 @@ func GetQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	question := db.GetQuestion(id)
+	question := db.Db.GetQuestion(id)
 	if question == nil {
 		err = errors.New("Question does not exist!")
-		JSONResponse(w, http.StatusNotFound, err)
+		util.JSONResponse(w, http.StatusNotFound, err)
 		return
 	}
-	JSONResponse(w, http.StatusOK, *question)
+	util.JSONResponse(w, http.StatusOK, *question)
 }
 
 func GetAuthorHandler(w http.ResponseWriter, r *http.Request) {
@@ -98,12 +101,12 @@ func GetAuthorHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	author := db.GetAuthor(id)
+	author := db.Db.GetAuthor(id)
 	if author == nil {
-		JSONResponse(w, http.StatusNotFound, "err")
+		util.JSONResponse(w, http.StatusNotFound, "err")
 		return
 	}
-	JSONResponse(w, http.StatusOK, *author)
+	util.JSONResponse(w, http.StatusOK, *author)
 }
 
 func GetAnswerHandler(w http.ResponseWriter, r *http.Request) {
@@ -111,8 +114,8 @@ func GetAnswerHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	answer := db.GetAnswer(id)
-	JSONResponse(w, http.StatusOK, *answer)
+	answer := db.Db.GetAnswer(id)
+	util.JSONResponse(w, http.StatusOK, *answer)
 }
 
 func DeleteQuestionHandler(w http.ResponseWriter, r *http.Request) {
@@ -120,8 +123,8 @@ func DeleteQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	db.DeleteQuestion(id)
-	JSONResponse(w, http.StatusOK, ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Question %d deleted", id)})
+	db.Db.DeleteQuestion(id)
+	util.JSONResponse(w, http.StatusOK, model.ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Question %d deleted", id)})
 }
 
 func DeleteAuthorHandler(w http.ResponseWriter, r *http.Request) {
@@ -129,8 +132,8 @@ func DeleteAuthorHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	db.DeleteAuthor(id)
-	JSONResponse(w, http.StatusOK, ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Author %d deleted", id)})
+	db.Db.DeleteAuthor(id)
+	util.JSONResponse(w, http.StatusOK, model.ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Author %d deleted", id)})
 }
 
 func DeleteAnswerHandler(w http.ResponseWriter, r *http.Request) {
@@ -138,12 +141,12 @@ func DeleteAnswerHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	db.DeleteAnswer(id)
-	JSONResponse(w, http.StatusOK, ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Answer %d deleted", id)})
+	db.Db.DeleteAnswer(id)
+	util.JSONResponse(w, http.StatusOK, model.ResponseInformation{Status: http.StatusOK, Message: fmt.Sprintf("Answer %d deleted", id)})
 }
 
 func UpdateAuthorHandler(w http.ResponseWriter, r *http.Request) {
-	var updatedAuthor *Author
+	var updatedAuthor *model.Author
 
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
@@ -155,20 +158,20 @@ func UpdateAuthorHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &updatedAuthor); err != nil {
-		JSONResponse(w, http.StatusUnprocessableEntity, err)
+		util.JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	author := db.GetAuthor(id)
+	author := db.Db.GetAuthor(id)
 	author.Email = updatedAuthor.Email
 	author.FirstName = updatedAuthor.FirstName
 	author.LastName = updatedAuthor.LastName
-	updatedAuthor = db.UpdateAuthor(author)
+	updatedAuthor = db.Db.UpdateAuthor(author)
 
-	JSONResponse(w, http.StatusOK, updatedAuthor)
+	util.JSONResponse(w, http.StatusOK, updatedAuthor)
 }
 
 func UpdateQuestionHandler(w http.ResponseWriter, r *http.Request) {
-	var jsonRequest RequestInformation
+	var jsonRequest model.RequestInformation
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		panic(err)
@@ -179,22 +182,22 @@ func UpdateQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &jsonRequest); err != nil {
-		JSONResponse(w, http.StatusUnprocessableEntity, err)
+		util.JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
-	q := db.GetQuestion(id)
+	q := db.Db.GetQuestion(id)
 	q.Body = jsonRequest.Body
 	q.Summary = jsonRequest.QuestionSummary
 	q.Title = jsonRequest.QuestionTitle
-	q.lastUpdated = time.Now()
+	q.LastUpdated = time.Now()
 
-	q = db.UpdateQuestion(q)
-	JSONResponse(w, http.StatusOK, q)
+	q = db.Db.UpdateQuestion(q)
+	util.JSONResponse(w, http.StatusOK, q)
 }
 
 func UpdateAnswerHandler(w http.ResponseWriter, r *http.Request) {
-	var jsonRequest RequestInformation
+	var jsonRequest model.RequestInformation
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		panic(err)
@@ -204,17 +207,17 @@ func UpdateAnswerHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &jsonRequest); err != nil {
-		JSONResponse(w, http.StatusUnprocessableEntity, err)
+		util.JSONResponse(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	answer := db.GetAnswer(id)
-	answer.authorId = jsonRequest.AuthorId
+	answer := db.Db.GetAnswer(id)
+	answer.AuthorID = jsonRequest.AuthorID
 	answer.Body = jsonRequest.Body
-	answer.lastUpdated = time.Now()
-	answer = db.UpdateAnswer(answer)
-	JSONResponse(w, http.StatusOK, answer)
+	answer.LastUpdated = time.Now()
+	answer = db.Db.UpdateAnswer(answer)
+	util.JSONResponse(w, http.StatusOK, answer)
 }
 
 func GetAllQuestions(w http.ResponseWriter, r *http.Request) {
-	JSONResponse(w, http.StatusOK, db.GetAllQuestions())
+	util.JSONResponse(w, http.StatusOK, db.Db.GetAllQuestions())
 }

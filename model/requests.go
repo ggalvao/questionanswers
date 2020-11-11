@@ -1,12 +1,15 @@
-package main
+package model
 
+// RequestInformation describes a JSON request body
 type RequestInformation struct {
-	AuthorId        int
-	QuestionId      int
+	AuthorID        int
+	QuestionID      int
 	Body            string
 	QuestionTitle   string
 	QuestionSummary string
 }
+
+// ResponseInformation describes a JSON response
 type ResponseInformation struct {
 	Status  int
 	Message string

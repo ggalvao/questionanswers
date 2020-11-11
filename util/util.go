@@ -1,10 +1,11 @@
-package main
+package util
 
 import (
 	"encoding/json"
 	"net/http"
 )
 
+// JSONResponse marshals a type to JSON and writes it as response
 func JSONResponse(w http.ResponseWriter, code int, output interface{}) {
 	// Convert our interface to JSON
 	response, _ := json.Marshal(output)
