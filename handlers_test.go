@@ -2,13 +2,19 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
-func TestAddAuthorHandler(t *testing.T) {
+func init() {
 	db.Init()
+
+}
+
+func TestAddAuthorHandler(t *testing.T) {
 	reqBody := []byte(`{
 		"FirstName": "Gabriel",
 		"LastName": "Galvão",
@@ -28,16 +34,22 @@ func TestAddAuthorHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-
+	var result Author
+	var expected Author
 	// Check the response body is what we expect.
-	expected := `{"Id":0,"Email":"ggalvao@gmail.com","FirstName":"Gabriel","LastName":"Galvão","Questions":null,"Answers":null}`
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
-	}
+	json.Unmarshal([]byte(`{"Id":0,"Email":"ggalvao@gmail.com","FirstName":"Gabriel","LastName":"Galvão","Questions":null,"Answers":null}`), &expected)
+	json.Unmarshal(rr.Body.Bytes(), &result)
 
+	expected.Id = 0
+	result.Id = 0
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			result, expected)
+	}
 }
 func TestAddQuestionHandler(t *testing.T) {
+	db.AddAuthor(Author{Email: "test@test.com", FirstName: "Test", LastName: "Test Last Name"})
 	reqBody := []byte(`{
 		"AuthorId": 0,
 		"QuestionTitle": "Test2 Question",

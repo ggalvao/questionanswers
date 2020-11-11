@@ -99,6 +99,10 @@ func GetAuthorHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	author := db.GetAuthor(id)
+	if author == nil {
+		JSONResponse(w, http.StatusNotFound, "err")
+		return
+	}
 	JSONResponse(w, http.StatusOK, *author)
 }
 
